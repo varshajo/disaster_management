@@ -1,0 +1,208 @@
+<div class="p-6 bg-blue-50 min-h-screen">
+  <!-- Stats Overview -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
+      <div class="flex items-center">
+        <div class="p-3 bg-blue-100 rounded-lg">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-sm font-medium text-blue-600">Pending Disasters</h3>
+          <p class="text-2xl font-semibold text-blue-900">{{ stats.pending }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
+      <div class="flex items-center">
+        <div class="p-3 bg-green-100 rounded-lg">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-sm font-medium text-green-600">Verified Disasters</h3>
+          <p class="text-2xl font-semibold text-green-900">{{ stats.verified }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500">
+      <div class="flex items-center">
+        <div class="p-3 bg-purple-100 rounded-lg">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-sm font-medium text-purple-600">Active Rescue Tasks</h3>
+          <p class="text-2xl font-semibold text-purple-900">{{ rescueTasks.length }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Disasters -->
+  <div class="bg-white rounded-lg shadow-lg mb-8 border border-blue-200">
+    <div class="px-6 py-4 border-b border-blue-200 bg-blue-50">
+      <h2 class="text-lg font-semibold text-blue-900">Pending Disaster Approvals</h2>
+    </div>
+    <div class="p-6">
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+      
+      <div *ngIf="!loading && pendingDisasters.length === 0" class="text-center py-8 text-gray-500">
+        No pending disasters to review
+      </div>
+
+      <div class="space-y-4" *ngIf="!loading && pendingDisasters.length > 0">
+        <div class="border rounded-lg p-4" *ngFor="let disaster of pendingDisasters">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-2">
+                <h3 class="text-lg font-medium text-gray-900">{{ disaster.disasterType }}</h3>
+                <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getSeverityBadgeClass(disaster.severity)">
+                  {{ disaster.severity }}
+                </span>
+              </div>
+              <p class="text-gray-600 mb-2">{{ disaster.description }}</p>
+              <div class="flex items-center space-x-4 text-sm text-gray-500">
+                <span>📍 {{ disaster.location }}</span>
+                <span>👤 {{ disaster.reportedBy }}</span>
+                <span>📅 {{ disaster.reportedAt | date:'medium' }}</span>
+              </div>
+            </div>
+            <div class="flex space-x-2 ml-4">
+              <button (click)="approveDisaster(disaster.id)" 
+                      class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700">
+                Approve
+              </button>
+              <button (click)="rejectDisaster(disaster.id)" 
+                      class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Disasters -->
+  <div class="bg-white rounded-lg shadow mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Active Disasters</h2>
+    </div>
+    <div class="p-6">
+      <div *ngIf="!loading && activeDisasters.length === 0" class="text-center py-8 text-gray-500">
+        No active disasters
+      </div>
+
+      <div class="overflow-x-auto" *ngIf="!loading && activeDisasters.length > 0">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reported</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let disaster of activeDisasters">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ disaster.disasterType }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ disaster.location }}</td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getSeverityBadgeClass(disaster.severity)">
+                  {{ disaster.severity }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getStatusBadgeClass(disaster.status)">
+                  {{ disaster.status }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ disaster.reportedAt | date:'short' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rescue Tasks -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Rescue Task Overview</h2>
+    </div>
+    <div class="p-6">
+      <div *ngIf="!loading && rescueTasks.length === 0" class="text-center py-8 text-gray-500">
+        No rescue tasks assigned
+      </div>
+
+      <div class="space-y-4" *ngIf="!loading && rescueTasks.length > 0">
+        <div class="border rounded-lg p-4" *ngFor="let task of rescueTasks">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-md font-medium text-gray-900">Task #{{ task.id }}</h4>
+              <p class="text-gray-600 text-sm">{{ task.description }}</p>
+              <div class="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                <span>Responder ID: {{ task.responderId }}</span>
+                <span>Disaster ID: {{ task.disasterId }}</span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getStatusBadgeClass(task.status)">
+                {{ task.status }}
+              </span>
+              <p class="text-xs text-gray-500 mt-1">Assigned: {{ task.assignedAt | date:'short' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disaster Map -->
+  <div class="bg-white rounded-lg shadow mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Disaster Locations Map</h2>
+    </div>
+    <div class="p-6">
+      <app-map [disasters]="activeDisasters"></app-map>
+    </div>
+  </div>
+
+  <!-- Analytics Charts -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Disaster Types Distribution</h2>
+      </div>
+      <div class="p-6">
+        <app-chart 
+          type="pie" 
+          [data]="getTypeDistributionData()"
+          title="Disaster Types">
+        </app-chart>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Monthly Trends</h2>
+      </div>
+      <div class="p-6">
+        <app-chart 
+          type="bar" 
+          [data]="getMonthlyTrendsData()"
+          title="Disaster Reports">
+        </app-chart>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,152 @@
+<div class="p-6">
+  <!-- Welcome Section -->
+  <div class="bg-white rounded-lg shadow p-6 mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Welcome, {{ currentUser?.name }}</h1>
+        <p class="text-gray-600 mt-1">Your region: <span class="font-medium">{{ userRegion }}</span></p>
+      </div>
+      <button (click)="toggleReportForm()" 
+              class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+        Report New Disaster
+      </button>
+    </div>
+  </div>
+
+  <!-- Report Form Modal -->
+  <div *ngIf="showReportForm" class="fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4">
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75" (click)="toggleReportForm()"></div>
+      <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Report Disaster</h3>
+        <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Disaster Type</label>
+              <select formControlName="disasterType" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Select type</option>
+                <option value="EARTHQUAKE">Earthquake</option>
+                <option value="FLOOD">Flood</option>
+                <option value="FIRE">Fire</option>
+                <option value="HURRICANE">Hurricane</option>
+                <option value="TORNADO">Tornado</option>
+                <option value="LANDSLIDE">Landslide</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <input type="text" formControlName="location" 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+              <select formControlName="severity" 
+                      class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Select severity</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="CRITICAL">Critical</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea formControlName="description" rows="4" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Describe the disaster situation..."></textarea>
+            </div>
+          </div>
+          
+          <div class="flex justify-end space-x-3 mt-6">
+            <button type="button" (click)="toggleReportForm()" 
+                    class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+              Cancel
+            </button>
+            <button type="submit" [disabled]="reportForm.invalid || submitting" 
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              <span *ngIf="!submitting">Submit Report</span>
+              <span *ngIf="submitting">Submitting...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Regional Alerts -->
+  <div class="bg-white rounded-lg shadow mb-8">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Regional Alerts</h2>
+      <p class="text-sm text-gray-600 mt-1">Active alerts for {{ userRegion }}</p>
+    </div>
+    <div class="p-6">
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+      
+      <div *ngIf="!loading && alerts.length === 0" class="text-center py-8 text-gray-500">
+        No active alerts in your region
+      </div>
+
+      <div class="space-y-4" *ngIf="!loading && alerts.length > 0">
+        <div class="border-l-4 p-4 rounded-r-lg" 
+             [ngClass]="getAlertSeverityClass(alert.severity)"
+             *ngFor="let alert of alerts">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-2">
+                <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getSeverityBadgeClass(alert.severity)">
+                  {{ alert.severity }}
+                </span>
+                <span class="text-sm text-gray-500">
+                  {{ alert.createdAt | date:'medium' }}
+                </span>
+              </div>
+              <p class="text-gray-800">{{ alert.message }}</p>
+              <p class="text-sm text-gray-600 mt-1">Disaster ID: #{{ alert.disasterId }}</p>
+            </div>
+            <div class="ml-4">
+              <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full" 
+                    [ngClass]="alert.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'">
+                {{ alert.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Disasters in Region -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Active Disasters Near You</h2>
+      <p class="text-sm text-gray-600 mt-1">Disasters affecting {{ userRegion }}</p>
+    </div>
+    <div class="p-6">
+      <div *ngIf="!loading && activeDisasters.length === 0" class="text-center py-8 text-gray-500">
+        No active disasters in your area
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="!loading && activeDisasters.length > 0">
+        <div class="border rounded-lg p-4" *ngFor="let disaster of activeDisasters">
+          <div class="flex items-center space-x-3 mb-2">
+            <h3 class="text-lg font-medium text-gray-900">{{ disaster.disasterType }}</h3>
+            <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getSeverityBadgeClass(disaster.severity)">
+              {{ disaster.severity }}
+            </span>
+          </div>
+          <p class="text-gray-600 mb-3">{{ disaster.description }}</p>
+          <div class="flex items-center justify-between text-sm text-gray-500">
+            <span>📍 {{ disaster.location }}</span>
+            <span>📅 {{ disaster.reportedAt | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

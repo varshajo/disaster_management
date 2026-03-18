@@ -1,0 +1,138 @@
+<div class="p-6">
+  <!-- Welcome Section -->
+  <div class="bg-white rounded-lg shadow p-6 mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Responder Dashboard</h1>
+        <p class="text-gray-600 mt-1">Welcome back, {{ currentUser?.name }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-gray-500">Responder ID</p>
+        <p class="text-lg font-semibold text-gray-900">#{{ responderId }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Statistics -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="p-3 bg-yellow-100 rounded-lg">
+          <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-sm font-medium text-gray-500">Pending Tasks</h3>
+          <p class="text-2xl font-semibold text-gray-900">{{ getTaskCountByStatus('PENDING') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="p-3 bg-blue-100 rounded-lg">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-sm font-medium text-gray-500">In Progress</h3>
+          <p class="text-2xl font-semibold text-gray-900">{{ getTaskCountByStatus('IN_PROGRESS') }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center">
+        <div class="p-3 bg-green-100 rounded-lg">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div class="ml-4">
+          <h3 class="text-sm font-medium text-gray-500">Completed</h3>
+          <p class="text-2xl font-semibold text-gray-900">{{ getTaskCountByStatus('COMPLETED') }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Tasks -->
+  <div class="bg-white rounded-lg shadow">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">My Rescue Tasks</h2>
+      <p class="text-sm text-gray-600 mt-1">Tasks assigned to you</p>
+    </div>
+    <div class="p-6">
+      <div *ngIf="loading" class="text-center py-4">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+      
+      <div *ngIf="!loading && myTasks.length === 0" class="text-center py-8 text-gray-500">
+        No tasks assigned to you yet
+      </div>
+
+      <div class="space-y-4" *ngIf="!loading && myTasks.length > 0">
+        <div class="border rounded-lg p-4" *ngFor="let task of myTasks">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-2">
+                <h3 class="text-lg font-medium text-gray-900">Task #{{ task.id }}</h3>
+                <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getStatusBadgeClass(task.status)">
+                  {{ task.status.replace('_', ' ') }}
+                </span>
+              </div>
+              
+              <p class="text-gray-600 mb-3">{{ task.description }}</p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-500">
+                <div class="flex items-center space-x-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  <span>Assigned: {{ task.assignedAt | date:'medium' }}</span>
+                </div>
+                
+                <div class="flex items-center space-x-2" *ngIf="task.completedAt">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span>Completed: {{ task.completedAt | date:'medium' }}</span>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  <span>Disaster ID: #{{ task.disasterId }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="ml-4">
+              <div *ngIf="canUpdateStatus(task.status)" class="space-y-2">
+                <button *ngFor="let nextStatus of getNextStatus(task.status)"
+                        (click)="updateTaskStatus(task.id, nextStatus)"
+                        [disabled]="updatingTaskId === task.id"
+                        class="block w-full px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span *ngIf="updatingTaskId !== task.id">
+                    Mark as {{ nextStatus.replace('_', ' ') }}
+                  </span>
+                  <span *ngIf="updatingTaskId === task.id">
+                    Updating...
+                  </span>
+                </button>
+              </div>
+              
+              <div *ngIf="!canUpdateStatus(task.status)" class="text-sm text-gray-500">
+                Task {{ task.status.toLowerCase().replace('_', ' ') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
